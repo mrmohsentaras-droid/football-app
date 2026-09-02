@@ -18,14 +18,20 @@ export async function GET() {
 
     const withSources = allPreds.map((prediction) => ({
       ...prediction,
-      sources: sourceRows
-        .filter(
-          (row) =>
-            row.matchDate === prediction.matchDate &&
-            row.homeTeam === prediction.homeTeam &&
-            row.awayTeam === prediction.awayTeam
+      sources: Array.from(
+        new Set(
+          sourceRows
+            .filter(
+              (row) =>
+                row.matchDate === prediction.matchDate &&
+                row.matchTime === prediction.matchTime &&
+                row.league === prediction.league &&
+                row.homeTeam === prediction.homeTeam &&
+                row.awayTeam === prediction.awayTeam
+            )
+            .map((row) => row.source)
         )
-        .map((row) => row.source),
+      ),
     }));
 
     const topPicks = withSources
