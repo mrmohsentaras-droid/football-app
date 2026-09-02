@@ -5,6 +5,7 @@ import { fetchAllNigeria } from "@/lib/sources/allNigeria";
 import type { SourceMatch } from "@/lib/sources/allNigeria";
 import { fetchStatarea } from "@/lib/sources/statarea";
 import { fetchSoccerVistaLeague } from "@/lib/sources/soccervista";
+import { fetchSportsMole } from "@/lib/sources/sportsmole";
 import { SOCCERVISTA_LEAGUES } from "@/lib/sources/soccervistaLeagues";
 import { buildConsensus } from "@/lib/consensus/buildConsensus";
 import { selectConsensusTopPicks } from "@/lib/consensus/topPicks";
@@ -53,20 +54,31 @@ export async function GET() {
 
     console.log(`SoccerVista total: ${soccerVista.length}`);
 
+    // دریافت Sports Mole
+    let sportsMole: SourceMatch[] = [];
+    try {
+      sportsMole = await fetchSportsMole();
+      console.log(`Sports Mole: ${sportsMole.length}`);
+    } catch (error) {
+      console.error("Sports Mole error:", error);
+    }
+
     // ساخت اجماع چندمنبعی
     const consensus = buildConsensus(
       allNigeria,
       statarea,
-      soccerVista
+      soccerVista,
+      sportsMole
     );
 
     console.log(`Consensus matches: ${consensus.length}`);
 
-    // ذخیره پیش‌بینی خام هر سه منبع برای ارزیابی عملکرد آینده
+    // ذخیره پیش‌بینی خام همه منابع برای ارزیابی عملکرد آینده
     const rawPredictions = [
       ...allNigeria,
       ...statarea,
       ...soccerVista,
+      ...sportsMole,
     ];
 
     if (rawPredictions.length > 0) {
@@ -129,6 +141,7 @@ export async function GET() {
         allNigeria: allNigeria.length,
         statarea: statarea.length,
         soccerVista: soccerVista.length,
+        sportsMole: sportsMole.length,
       },
       consensusMatches: consensus.length,
       topPicks: topPicks.map((pick, index) => ({

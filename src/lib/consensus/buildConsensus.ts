@@ -19,12 +19,14 @@ export interface ConsensusMatch {
 export function buildConsensus(
   allNigeria: SourceMatch[],
   statarea: SourceMatch[],
-  soccerVista: SourceMatch[]
+  soccerVista: SourceMatch[],
+  sportsMole: SourceMatch[]
 ): ConsensusMatch[] {
   const allSources: SourceMatch[] = [
     ...allNigeria,
     ...statarea,
     ...soccerVista,
+    ...sportsMole,
   ];
 
   // گروه‌بندی بازی‌های یکسان با استفاده از matcher
