@@ -11,7 +11,7 @@ export const maxDuration = 60;
 
 export async function GET() {
   try {
-    const [anf, statarea, soccervista, sportsmole, forebet, predictz, windrawwin] = await Promise.allSettled([
+    const [anf, stat, sv, sm, fb, pz, wdw] = await Promise.allSettled([
       scrapeAllNigeriaFootball(),
       scrapeStatarea(),
       scrapeSoccerVista(),
@@ -22,12 +22,12 @@ export async function GET() {
     ]);
 
     const anfVal = anf.status === 'fulfilled' ? anf.value : [];
-    const statVal = statarea.status === 'fulfilled' ? statarea.value : [];
-    const svVal = soccervista.status === 'fulfilled' ? soccervista.value : [];
-    const smVal = sportsmole.status === 'fulfilled' ? sportsmole.value : [];
-    const fbVal = forebet.status === 'fulfilled' ? forebet.value : [];
-    const pzVal = predictz.status === 'fulfilled' ? predictz.value : [];
-    const wdwVal = windrawwin.status === 'fulfilled' ? wdwVal.value : [];
+    const statVal = stat.status === 'fulfilled' ? stat.value : [];
+    const svVal = sv.status === 'fulfilled' ? sv.value : [];
+    const smVal = sm.status === 'fulfilled' ? sm.value : [];
+    const fbVal = fb.status === 'fulfilled' ? fb.value : [];
+    const pzVal = pz.status === 'fulfilled' ? pz.value : [];
+    const wdwVal = wdw.status === 'fulfilled' ? wdw.value : [];
 
     const allMatches = [
       ...anfVal,
