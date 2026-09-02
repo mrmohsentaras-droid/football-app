@@ -80,11 +80,11 @@ export default function Home() {
                   </span>
                 </div>
 
-                {/* Team Names: Home vs Away */}
+                {/* Strict Team Alignment: Home (Left) VS Away (Right) */}
                 <div className="flex items-center justify-between my-2 text-center">
-                  <div className="w-2/5 font-bold text-base text-gray-100">{match.home}</div>
+                  <div className="w-2/5 font-bold text-base text-gray-100 text-left">{match.home}</div>
                   <div className="w-1/5 text-xs text-gray-500 font-bold bg-gray-800/50 py-1 rounded-md">VS</div>
-                  <div className="w-2/5 font-bold text-base text-gray-100">{match.away}</div>
+                  <div className="w-2/5 font-bold text-base text-gray-100 text-right">{match.away}</div>
                 </div>
 
                 {/* Stats Footer */}
