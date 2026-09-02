@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { predictions, sourcePredictions } from "@/db/schema";
 import { desc } from "drizzle-orm";
-import { isUpcomingMatch } from "@/lib/scraper";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +37,7 @@ export async function GET() {
       .filter(
         (prediction) =>
           prediction.isTopPick === true &&
-          prediction.pickRank !== null &&
-          isUpcomingMatch(prediction)
+          prediction.pickRank !== null
       )
       .sort(
         (a, b) =>
