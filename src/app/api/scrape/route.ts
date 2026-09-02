@@ -29,19 +29,6 @@ export async function GET() {
     const pzVal = pz.status === 'fulfilled' ? pz.value : [];
     const wdwVal = wdw.status === 'fulfilled' ? wdw.value : [];
 
-    // استانداردسازی جایگاه میزبان و میهمان
-    const normalizeMatch = (item: any) => {
-      // برای بازی Celtic vs Aberdeen
-      if (item.home?.toLowerCase().includes('aberdeen') && item.away?.toLowerCase().includes('celtic')) {
-        return { ...item, home: 'Celtic', away: 'Aberdeen' };
-      }
-      // برای بازی CR Flamengo vs Mirassol FC
-      if (item.home?.toLowerCase().includes('mirassol') && item.away?.toLowerCase().includes('flamengo')) {
-        return { ...item, home: 'CR Flamengo', away: 'Mirassol FC' };
-      }
-      return item;
-    };
-
     const allMatches = [
       ...anfVal,
       ...statVal,
@@ -50,7 +37,7 @@ export async function GET() {
       ...fbVal,
       ...pzVal,
       ...wdwVal
-    ].map(normalizeMatch);
+    ];
 
     const consensusResults = processConsensus(allMatches);
     const topPicks = getTopPicks(consensusResults, 2);
