@@ -27,7 +27,7 @@ export async function GET() {
     const smVal = sportsmole.status === 'fulfilled' ? sportsmole.value : [];
     const fbVal = forebet.status === 'fulfilled' ? forebet.value : [];
     const pzVal = predictz.status === 'fulfilled' ? predictz.value : [];
-    const wdwVal = windrawwin.status === 'fulfilled' ? windrawwin.value : [];
+    const wdwVal = windrawwin.status === 'fulfilled' ? wdwVal.value : [];
 
     const allMatches = [
       ...anfVal,
