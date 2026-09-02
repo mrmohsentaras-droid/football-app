@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server';
-import { scrapeAllNigeriaFootball } from '@/lib/scrapers/allNigeriaFootball';
-import { scrapeStatarea } from '@/lib/scrapers/statarea';
-import { scrapeSoccerVista } from '@/lib/scrapers/soccerVista';
-import { scrapeSportsMole } from '@/lib/scrapers/sportsMole';
-import { scrapeForebet, scrapePredictZ, scrapeWinDrawWin } from '@/lib/scrapers/additionalSources';
-import { processConsensus } from '@/lib/consensus/engine';
-import { getTopPicks } from '@/lib/consensus/topPicks';
+import { scrapeAllNigeriaFootball } from '../../../lib/scrapers/allNigeriaFootball';
+import { scrapeStatarea } from '../../../lib/scrapers/statarea';
+import { scrapeSoccerVista } from '../../../lib/scrapers/soccerVista';
+import { scrapeSportsMole } from '../../../lib/scrapers/sportsMole';
+import { scrapeForebet, scrapePredictZ, scrapeWinDrawWin } from '../../../lib/scrapers/additionalSources';
+import { processConsensus } from '../../../lib/consensus/engine';
+import { getTopPicks } from '../../../lib/consensus/topPicks';
 
-export const maxDuration = 60; // افزایش زمان مجاز اجرا به ۶۰ ثانیه
+export const maxDuration = 60;
 
 export async function GET() {
   try {
-    // اجرای هم‌زمان تمام ۷ منبع معتبر
     const [anf, statarea, soccervista, sportsmole, forebet, predictz, windrawwin] = await Promise.allSettled([
       scrapeAllNigeriaFootball(),
       scrapeStatarea(),

@@ -1,23 +1,20 @@
-import { GET } from "../src/app/api/scrape/route";
-import { pool } from "../src/db";
+import axios from 'axios';
 
-async function main() {
+async function triggerScrape() {
+  const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN 
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : 'https://football-app-production-843e.up.railway.app';
+
+  console.log(`Sending scrape request to: ${baseUrl}/api/scrape ...`);
+
   try {
-    const response = await GET();
-    const body = await response.text();
-
-    console.log("SCRAPE STATUS:", response.status);
-    console.log(body);
-
-    if (!response.ok) {
-      process.exitCode = 1;
-    }
-  } catch (error) {
-    console.error("CRON SCRAPE ERROR:", error);
-    process.exitCode = 1;
-  } finally {
-    await pool.end();
+    const response = await axios.get(`${baseUrl}/api/scrape`, { timeout: 60000 });
+    console.log('Scrape completed successfully!');
+    console.log(`Total Matches: ${response.data.totalMatchesScraped}`);
+    console.log(`Active Sources: ${response.data.activeSourcesCount}`);
+  } catch (error: any) {
+    console.error('Scrape request failed:', error.message);
   }
 }
 
-main();
+triggerScrape();
