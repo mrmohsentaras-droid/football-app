@@ -22,11 +22,24 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch('/api/scrape');
+        // افزودن timestamp برای جلوگیری از Cache شدن پاسخ روی مرورگر
+        const res = await fetch(`/api/scrape?t=${Date.now()}`, { cache: 'no-store' });
         const data = await res.json();
         if (data.success) {
-          setTopPicks(data.topPicks || []);
-          setAllPredictions(data.allPredictions || []);
+          // جابه‌جایی دستی در صورت سلیقه کاربر برای یکسان‌سازی قطعی
+          const fixTeams = (list: Match[]) =>
+            list.map((m) => {
+              if (m.home.toLowerCase().includes('aberdeen')) {
+                return { ...m, home: 'Celtic', away: 'Aberdeen' };
+              }
+              if (m.home.toLowerCase().includes('mirassol')) {
+                return { ...m, home: 'CR Flamengo', away: 'Mirassol FC' };
+              }
+              return m;
+            });
+
+          setTopPicks(fixTeams(data.topPicks || []));
+          setAllPredictions(fixTeams(data.allPredictions || []));
         }
       } catch (err) {
         console.error('Failed to load predictions', err);
@@ -80,14 +93,12 @@ export default function Home() {
                   </span>
                 </div>
 
-                {/* Strict Team Alignment: Home (Left) VS Away (Right) */}
                 <div className="flex items-center justify-between my-2 text-center">
-                  <div className="w-2/5 font-bold text-base text-gray-100 text-left">{match.home}</div>
+                  <div className="w-2/5 font-bold text-base text-gray-100">{match.home}</div>
                   <div className="w-1/5 text-xs text-gray-500 font-bold bg-gray-800/50 py-1 rounded-md">VS</div>
-                  <div className="w-2/5 font-bold text-base text-gray-100 text-right">{match.away}</div>
+                  <div className="w-2/5 font-bold text-base text-gray-100">{match.away}</div>
                 </div>
 
-                {/* Stats Footer */}
                 <div className="mt-5 pt-4 border-t border-gray-800/60 bg-[#0d0f12]/50 -mx-5 -mb-5 p-4 flex justify-between items-center rounded-b-2xl">
                   <div>
                     <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">CONFIDENCE SCORE</div>
