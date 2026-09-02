@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { scrapeAllNigeriaFootball } from '../../../lib/scrapers/allNigeriaFootball';
-import { scrapeStatarea } from '../../../lib/scrapers/statarea';
-import { scrapeSoccerVista } from '../../../lib/scrapers/soccerVista';
-import { scrapeSportsMole } from '../../../lib/scrapers/sportsMole';
-import { scrapeForebet, scrapePredictZ, scrapeWinDrawWin } from '../../../lib/scrapers/additionalSources';
-import { processConsensus } from '../../../lib/consensus/engine';
-import { getTopPicks } from '../../../lib/consensus/topPicks';
+import { scrapeAllNigeriaFootball } from '@/lib/scrapers/allNigeriaFootball';
+import { scrapeStatarea } from '@/lib/scrapers/statarea';
+import { scrapeSoccerVista } from '@/lib/scrapers/soccerVista';
+import { scrapeSportsMole } from '@/lib/scrapers/sportsMole';
+import { scrapeForebet, scrapePredictZ, scrapeWinDrawWin } from '@/lib/scrapers/additionalSources';
+import { processConsensus } from '@/lib/consensus/engine';
+import { getTopPicks } from '@/lib/consensus/topPicks';
 
 export const maxDuration = 60;
 
@@ -21,14 +21,22 @@ export async function GET() {
       scrapeWinDrawWin()
     ]);
 
+    const anfVal = anf.status === 'fulfilled' ? anf.value : [];
+    const statVal = statarea.status === 'fulfilled' ? statarea.value : [];
+    const svVal = soccervista.status === 'fulfilled' ? soccervista.value : [];
+    const smVal = sportsmole.status === 'fulfilled' ? sportsmole.value : [];
+    const fbVal = forebet.status === 'fulfilled' ? forebet.value : [];
+    const pzVal = predictz.status === 'fulfilled' ? predictz.value : [];
+    const wdwVal = windrawwin.status === 'fulfilled' ? windrawwin.value : [];
+
     const allMatches = [
-      ...(anf.status === 'fulfilled' ? anf.value : []),
-      ...(statarea.status === 'fulfilled' ? statarea.value : []),
-      ...(soccervista.status === 'fulfilled' ? soccervista.value : []),
-      ...(sportsmole.status === 'fulfilled' ? sportsmole.value : []),
-      ...(forebet.status === 'fulfilled' ? forebet.value : []),
-      ...(predictz.status === 'fulfilled' ? predictz.value : []),
-      ...(windrawwin.status === 'fulfilled' ? windrawwin.value : [])
+      ...anfVal,
+      ...statVal,
+      ...svVal,
+      ...smVal,
+      ...fbVal,
+      ...pzVal,
+      ...wdwVal
     ];
 
     const consensusResults = processConsensus(allMatches);
@@ -36,8 +44,17 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      totalMatchesScraped: allMatches.length,
       activeSourcesCount: 7,
+      sources: {
+        allNigeria: anfVal.length,
+        statarea: statVal.length,
+        soccerVista: svVal.length,
+        sportsMole: smVal.length,
+        forebet: fbVal.length,
+        predictZ: pzVal.length,
+        winDrawWin: wdwVal.length
+      },
+      consensusMatches: consensusResults.length,
       topPicks,
       allPredictions: consensusResults
     });
