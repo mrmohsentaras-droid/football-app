@@ -14,6 +14,7 @@ export interface ConsensusMatch {
   sourceCount: number;
   agreementPercent: number;
   reasoning: string;
+  sources: string[];
 }
 
 export function buildConsensus(
@@ -91,6 +92,7 @@ export function buildConsensus(
       sourceCount: consensus.sourceCount,
       agreementPercent: consensus.agreementPercent,
       reasoning: consensus.reasoning,
+      sources: sourceMatches.map((match) => match.source),
     });
   }
 

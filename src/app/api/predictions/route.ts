@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { predictions } from "@/db/schema";
+import { predictions, sourcePredictions } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { isUpcomingMatch } from "@/lib/scraper";
 
@@ -14,7 +14,21 @@ export async function GET() {
       .orderBy(desc(predictions.confidenceScore));
 
     // فقط Top Pickهایی که قبلاً توسط موتور اجماع تأیید شده‌اند
-    const topPicks = allPreds
+    const sourceRows = await db.select().from(sourcePredictions);
+
+    const withSources = allPreds.map((prediction) => ({
+      ...prediction,
+      sources: sourceRows
+        .filter(
+          (row) =>
+            row.matchDate === prediction.matchDate &&
+            row.homeTeam === prediction.homeTeam &&
+            row.awayTeam === prediction.awayTeam
+        )
+        .map((row) => row.source),
+    }));
+
+    const topPicks = withSources
       .filter(
         (prediction) =>
           prediction.isTopPick === true &&
@@ -34,7 +48,7 @@ export async function GET() {
 
     return NextResponse.json({
       topPicks,
-      allPredictions: allPreds,
+      allPredictions: withSources,
       lastUpdated:
         allPreds.length > 0
           ? allPreds[0].scrapedAt

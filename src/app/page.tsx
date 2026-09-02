@@ -14,6 +14,7 @@ type Prediction = {
   isTopPick: boolean;
   pickRank: number | null;
   reasoning: string | null;
+  sources: string[];
 };
 
 type ApiResponse = {
@@ -286,6 +287,34 @@ export default function Home() {
                     <span className={scoreClass(p.confidenceScore)}>
                       اعتماد بالا
                     </span>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl bg-slate-950/70 p-4">
+                    <div className="mb-3 text-xs font-bold text-slate-400">
+                      منابع این بازی
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {[
+                        "AllNigeriaFootball",
+                        "Statarea",
+                        "SoccerVista",
+                        "Sports Mole",
+                      ].map((source) => {
+                        const active = p.sources?.includes(source);
+                        return (
+                          <div
+                            key={source}
+                            className={`rounded-xl px-3 py-2 ${
+                              active
+                                ? "bg-emerald-500/10 text-emerald-400"
+                                : "bg-slate-800/60 text-slate-500"
+                            }`}
+                          >
+                            {active ? "✅" : "❌"} {source}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {p.reasoning && (
