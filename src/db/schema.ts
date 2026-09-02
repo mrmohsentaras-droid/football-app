@@ -23,3 +23,28 @@ export const predictions = pgTable("predictions", {
   reasoning: text("reasoning"),
   scrapedAt: timestamp("scraped_at").defaultNow().notNull(),
 });
+
+export const sourcePredictions = pgTable("source_predictions", {
+  id: serial("id").primaryKey(),
+
+  matchDate: text("match_date").notNull(),
+  matchTime: text("match_time").notNull(),
+
+  league: text("league").notNull(),
+
+  homeTeam: text("home_team").notNull(),
+  awayTeam: text("away_team").notNull(),
+
+  source: text("source").notNull(),
+  tip: text("tip").notNull(),
+
+  homeGoals: integer("home_goals"),
+  awayGoals: integer("away_goals"),
+
+  isCorrect: boolean("is_correct"),
+
+  scrapedAt: timestamp("scraped_at").defaultNow().notNull(),
+
+  resultCheckedAt: timestamp("result_checked_at"),
+});
+
