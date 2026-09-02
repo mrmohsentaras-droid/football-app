@@ -1,24 +1,32 @@
 export function processConsensus(matches: any[]) {
-  const groups: Record<string, any> = {};
-  for (const m of matches) {
-    const key = `${m.home}-${m.away}`;
-    if (!groups[key]) {
-      groups[key] = {
-        home: m.home,
-        away: m.away,
-        league: m.league,
-        consensusTip: m.tip,
-        sources: [m.source],
+  const map = new Map<string, any>();
+
+  for (const item of matches) {
+    if (!item || !item.home || !item.away) continue;
+    
+    const key = `${item.home.trim().toLowerCase()}-${item.away.trim().toLowerCase()}`;
+    const existing = map.get(key);
+
+    if (!existing) {
+      map.set(key, {
+        home: item.home,
+        away: item.away,
+        league: item.league || 'Unknown',
+        consensusTip: item.tip || '1',
+        sources: [item.source],
         agreementCount: 1,
         sourceCount: 1,
         confidenceScore: 60
-      };
+      });
     } else {
-      groups[key].sources.push(m.source);
-      groups[key].agreementCount += 1;
-      groups[key].sourceCount += 1;
-      groups[key].confidenceScore = Math.min(95, groups[key].confidenceScore + 15);
+      if (!existing.sources.includes(item.source)) {
+        existing.sources.push(item.source);
+        existing.agreementCount += 1;
+        existing.sourceCount += 1;
+        existing.confidenceScore = Math.min(98, existing.confidenceScore + 12);
+      }
     }
   }
-  return Object.values(groups);
+
+  return Array.from(map.values());
 }
