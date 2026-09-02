@@ -82,19 +82,52 @@ export async function GET() {
     ];
 
     if (rawPredictions.length > 0) {
-      await db.insert(sourcePredictions).values(
-        rawPredictions.map((match) => ({
-          matchDate: match.date,
-          matchTime: match.time,
-          league: match.league,
-          homeTeam: match.home,
-          awayTeam: match.away,
-          source: match.source,
-          tip: match.tip,
-        }))
+      const existing = await db
+        .select({
+          matchDate: sourcePredictions.matchDate,
+          matchTime: sourcePredictions.matchTime,
+          league: sourcePredictions.league,
+          homeTeam: sourcePredictions.homeTeam,
+          awayTeam: sourcePredictions.awayTeam,
+          source: sourcePredictions.source,
+        })
+        .from(sourcePredictions);
+
+      const existingKeys = new Set(
+        existing.map(
+          (row) =>
+            `${row.matchDate}|${row.matchTime}|${row.league}|${row.homeTeam}|${row.awayTeam}|${row.source}`
+        )
       );
 
-      console.log(`Raw source predictions saved: ${rawPredictions.length}`);
+      const newPredictions = rawPredictions.filter((match) => {
+        const key = `${match.date}|${match.time}|${match.league}|${match.home}|${match.away}|${match.source}`;
+
+        if (existingKeys.has(key)) {
+          return false;
+        }
+
+        existingKeys.add(key);
+        return true;
+      });
+
+      if (newPredictions.length > 0) {
+        await db.insert(sourcePredictions).values(
+          newPredictions.map((match) => ({
+            matchDate: match.date,
+            matchTime: match.time,
+            league: match.league,
+            homeTeam: match.home,
+            awayTeam: match.away,
+            source: match.source,
+            tip: match.tip,
+          }))
+        );
+      }
+
+      console.log(
+        `Raw source predictions: ${rawPredictions.length} fetched, ${newPredictions.length} new, ${rawPredictions.length - newPredictions.length} duplicates skipped`
+      );
     }
 
     // انتخاب حداکثر ۲ بازی با بالاترین اطمینان
