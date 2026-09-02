@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { predictions } from "@/db/schema";
+import { predictions, sourcePredictions } from "@/db/schema";
 import { fetchAllNigeria } from "@/lib/sources/allNigeria";
 import type { SourceMatch } from "@/lib/sources/allNigeria";
 import { fetchStatarea } from "@/lib/sources/statarea";
@@ -61,6 +61,29 @@ export async function GET() {
     );
 
     console.log(`Consensus matches: ${consensus.length}`);
+
+    // ذخیره پیش‌بینی خام هر سه منبع برای ارزیابی عملکرد آینده
+    const rawPredictions = [
+      ...allNigeria,
+      ...statarea,
+      ...soccerVista,
+    ];
+
+    if (rawPredictions.length > 0) {
+      await db.insert(sourcePredictions).values(
+        rawPredictions.map((match) => ({
+          matchDate: match.date,
+          matchTime: match.time,
+          league: match.league,
+          homeTeam: match.home,
+          awayTeam: match.away,
+          source: match.source,
+          tip: match.tip,
+        }))
+      );
+
+      console.log(`Raw source predictions saved: ${rawPredictions.length}`);
+    }
 
     // انتخاب حداکثر ۲ بازی با بالاترین اطمینان
     const topPicks = selectConsensusTopPicks(consensus, 2);
