@@ -7,7 +7,8 @@
     "start": "npm run db:migrate; next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "db:migrate": "tsx src/db/migrate.ts",
+    "cron:scrape": "tsx scripts/run-scrape.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",
