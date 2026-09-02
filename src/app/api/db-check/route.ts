@@ -55,7 +55,9 @@ export async function GET() {
         home_team,
         away_team,
         source,
-        COUNT(*)::int AS count
+        COUNT(*)::int AS count,
+        COUNT(DISTINCT tip)::int AS distinct_tips,
+        ARRAY_AGG(DISTINCT tip ORDER BY tip) AS tips
       FROM source_predictions
       GROUP BY
         match_date,
