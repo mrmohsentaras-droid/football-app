@@ -95,6 +95,27 @@ export async function GET() {
       LIMIT 20
     `);
 
+    const tipVariantDetails = await db.execute(sql`
+      SELECT
+        id,
+        match_date,
+        match_time,
+        league,
+        home_team,
+        away_team,
+        source,
+        tip,
+        scraped_at
+      FROM source_predictions
+      WHERE match_date = '2026-09-05'
+        AND match_time = '14:00'
+        AND league = 'Premier League'
+        AND home_team = 'Nottingham'
+        AND away_team = 'Tottenham'
+        AND source = 'SoccerVista'
+      ORDER BY id
+    `);
+
     const samples = await db.execute(sql`
       SELECT
         match_date,
@@ -134,6 +155,7 @@ export async function GET() {
         tipVariants.rows[0]?.groups_with_multiple_tips ?? 0
       ),
       duplicateTipVariantSamples: tipVariantSamples.rows,
+      tipVariantDetails: tipVariantDetails.rows,
       duplicatesBySource: duplicates.rows,
       duplicateSamples: samples.rows,
     });
