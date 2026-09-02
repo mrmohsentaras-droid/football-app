@@ -47,6 +47,28 @@ export async function GET() {
       ORDER BY duplicate_rows DESC
     `);
 
+    const samples = await db.execute(sql`
+      SELECT
+        match_date,
+        match_time,
+        league,
+        home_team,
+        away_team,
+        source,
+        COUNT(*)::int AS count
+      FROM source_predictions
+      GROUP BY
+        match_date,
+        match_time,
+        league,
+        home_team,
+        away_team,
+        source
+      HAVING COUNT(*) > 1
+      ORDER BY COUNT(*) DESC, source, match_date
+      LIMIT 20
+    `);
+
     const total = totals.rows[0] ?? {
       total_rows: 0,
       unique_rows: 0,
@@ -54,10 +76,12 @@ export async function GET() {
 
     return Response.json({
       ok: true,
-      totalRows: total.total_rows,
-      uniqueRows: total.unique_rows,
-      duplicateRows: Number(total.total_rows) - Number(total.unique_rows),
+      totalRows: Number(total.total_rows),
+      uniqueRows: Number(total.unique_rows),
+      duplicateRows:
+        Number(total.total_rows) - Number(total.unique_rows),
       duplicatesBySource: duplicates.rows,
+      duplicateSamples: samples.rows,
     });
   } catch (error) {
     return Response.json(
