@@ -1,61 +1,128 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { predictions } from "@/db/schema";
-import { scrapeFromWebsite, scorePredictions, selectTopPicks } from "@/lib/scraper";
-import { eq } from "drizzle-orm";
+import { fetchAllNigeria } from "@/lib/sources/allNigeria";
+import type { SourceMatch } from "@/lib/sources/allNigeria";
+import { fetchStatarea } from "@/lib/sources/statarea";
+import { fetchSoccerVistaLeague } from "@/lib/sources/soccervista";
+import { SOCCERVISTA_LEAGUES } from "@/lib/sources/soccervistaLeagues";
+import { buildConsensus } from "@/lib/consensus/buildConsensus";
+import { selectConsensusTopPicks } from "@/lib/consensus/topPicks";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const rawPredictions = await scrapeFromWebsite();
-
-    if (rawPredictions.length === 0) {
-      return NextResponse.json(
-        { error: "هیچ پیش‌بینی‌ای یافت نشد", predictions: [] },
-        { status: 200 }
-      );
+    // دریافت AllNigeria
+    let allNigeria: SourceMatch[] = [];
+    try {
+      allNigeria = await fetchAllNigeria();
+      console.log(`AllNigeriaFootball: ${allNigeria.length}`);
+    } catch (error) {
+      console.error("AllNigeriaFootball error:", error);
     }
 
-    const scored = scorePredictions(rawPredictions);
-    const topPicks = selectTopPicks(scored, 2);
+    // دریافت Statarea
+    let statarea: SourceMatch[] = [];
+    try {
+      statarea = await fetchStatarea();
+      console.log(`Statarea: ${statarea.length}`);
+    } catch (error) {
+      console.error("Statarea error:", error);
+    }
 
-    // Clear old data
+    // دریافت SoccerVista از تمام لیگ‌های تنظیم‌شده
+    const soccerVista: SourceMatch[] = [];
+
+    for (const league of SOCCERVISTA_LEAGUES) {
+      try {
+        const matches = await fetchSoccerVistaLeague(league.url);
+
+        console.log(
+          `SoccerVista ${league.name}: ${matches.length}`
+        );
+
+        soccerVista.push(...matches);
+      } catch (error) {
+        console.error(
+          `SoccerVista ${league.name} error:`,
+          error
+        );
+      }
+    }
+
+    console.log(`SoccerVista total: ${soccerVista.length}`);
+
+    // ساخت اجماع چندمنبعی
+    const consensus = buildConsensus(
+      allNigeria,
+      statarea,
+      soccerVista
+    );
+
+    console.log(`Consensus matches: ${consensus.length}`);
+
+    // انتخاب حداکثر ۲ بازی با بالاترین اطمینان
+    const topPicks = selectConsensusTopPicks(consensus, 2);
+
+    console.log(`Top picks: ${topPicks.length}`);
+
+    // پاک کردن داده‌های قبلی
     await db.delete(predictions);
 
-    // Insert all predictions
-    const allToInsert = scored.map((p) => {
-      const isTop = topPicks.includes(p);
-      const rank = isTop ? topPicks.indexOf(p) + 1 : null;
-      return {
-        matchDate: p.matchDate,
-        matchTime: p.matchTime,
-        league: p.league,
-        homeTeam: p.homeTeam,
-        awayTeam: p.awayTeam,
-        tip: p.tip,
-        confidenceScore: p.confidenceScore,
-        isTopPick: isTop,
-        pickRank: rank,
-        reasoning: p.reasoning,
-      };
-    });
+    // ذخیره نتایج اجماع
+    if (consensus.length > 0) {
+      const allToInsert = consensus.map((match) => {
+        const topIndex = topPicks.findIndex(
+          (pick) =>
+            pick.date === match.date &&
+            pick.time === match.time &&
+            pick.home === match.home &&
+            pick.away === match.away
+        );
 
-    await db.insert(predictions).values(allToInsert);
+        const isTop = topIndex !== -1;
+
+        return {
+          matchDate: match.date,
+          matchTime: match.time,
+          league: match.league,
+          homeTeam: match.home,
+          awayTeam: match.away,
+          tip: match.consensusTip,
+          confidenceScore: match.confidenceScore,
+          isTopPick: isTop,
+          pickRank: isTop ? topIndex + 1 : null,
+          reasoning: match.reasoning,
+        };
+      });
+
+      await db.insert(predictions).values(allToInsert);
+    }
 
     return NextResponse.json({
       success: true,
-      total: scored.length,
-      topPicks: topPicks.map((p, i) => ({
-        rank: i + 1,
-        ...p,
+      sources: {
+        allNigeria: allNigeria.length,
+        statarea: statarea.length,
+        soccerVista: soccerVista.length,
+      },
+      consensusMatches: consensus.length,
+      topPicks: topPicks.map((pick, index) => ({
+        rank: index + 1,
+        ...pick,
       })),
-      allPredictions: scored.sort((a, b) => b.confidenceScore - a.confidenceScore),
+      allPredictions: consensus,
     });
   } catch (error: any) {
     console.error("Scrape error:", error);
+
     return NextResponse.json(
-      { error: error.message || "خطا در دریافت داده‌ها" },
+      {
+        error:
+          error.message ||
+          "خطا در دریافت و پردازش پیش‌بینی‌ها",
+      },
       { status: 500 }
     );
   }

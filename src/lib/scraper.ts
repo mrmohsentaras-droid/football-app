@@ -131,6 +131,38 @@ function getLeagueScore(league: string): { score: number; reason: string } {
   return { score: 5, reason: `لیگ: ${league}` };
 }
 
+function getMatchTimestamp(matchDate: string, matchTime: string): number | null {
+  const dateMatch = matchDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const timeMatch = matchTime.match(/^(\d{2}):(\d{2})$/);
+
+  if (!dateMatch || !timeMatch) return null;
+
+  const year = Number(dateMatch[1]);
+  const month = Number(dateMatch[2]);
+  const day = Number(dateMatch[3]);
+  const hour = Number(timeMatch[1]);
+  const minute = Number(timeMatch[2]);
+
+  if (
+    month < 1 || month > 12 ||
+    day < 1 || day > 31 ||
+    hour < 0 || hour > 23 ||
+    minute < 0 || minute > 59
+  ) {
+    return null;
+  }
+
+  return new Date(year, month - 1, day, hour, minute, 0, 0).getTime();
+}
+
+export function isUpcomingMatch(prediction: RawPrediction, now: Date = new Date()): boolean {
+  const timestamp = getMatchTimestamp(prediction.matchDate, prediction.matchTime);
+
+  if (timestamp === null) return false;
+
+  return timestamp > now.getTime();
+}
+
 export function scorePredictions(predictions: RawPrediction[]): ScoredPrediction[] {
   return predictions.map((pred) => {
     const tipResult = getTipScore(pred.tip);
@@ -149,7 +181,15 @@ export function scorePredictions(predictions: RawPrediction[]): ScoredPrediction
 }
 
 export function selectTopPicks(scored: ScoredPrediction[], count: number = 2): ScoredPrediction[] {
-  const sorted = [...scored].sort((a, b) => b.confidenceScore - a.confidenceScore);
+  // فقط بازی‌هایی که هنوز شروع نشده‌اند
+  const upcoming = scored.filter((prediction) => isUpcomingMatch(prediction));
+
+  // سپس بر اساس امتیاز اطمینان مرتب می‌کنیم
+  const sorted = [...upcoming].sort(
+    (a, b) => b.confidenceScore - a.confidenceScore
+  );
+
+  // حداکثر دو بازی آینده را انتخاب می‌کنیم
   return sorted.slice(0, count);
 }
 
