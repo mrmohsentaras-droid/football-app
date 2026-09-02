@@ -30,7 +30,7 @@ function normalizeTip(tip: string): string {
 
   if (t === "1" || t.includes("home win")) return "1";
   if (t === "2" || t.includes("away win")) return "2";
-  if (t === "x") return "x";
+  if (t === "x" || t === "draw") return "x";
 
   if (t === "1x" || t.includes("home or draw")) return "1x";
   if (t === "x2" || t.includes("away or draw")) return "x2";
@@ -76,6 +76,7 @@ function calculateAgreement(predictions: SourcePrediction[]) {
       count: number;
       weight: number;
       sources: string[];
+      tips: string[];
     }
   >();
 
@@ -92,11 +93,13 @@ function calculateAgreement(predictions: SourcePrediction[]) {
       count: 0,
       weight: 0,
       sources: [],
+      tips: [],
     };
 
     current.count += 1;
     current.weight += weight;
     current.sources.push(prediction.source);
+    current.tips.push(prediction.tip);
 
     groups.set(family, current);
   }
@@ -129,48 +132,63 @@ export function calculateConsensus(
   }
 
   const groups = calculateAgreement(validPredictions);
-  const winner = groups[0];
 
+  const winner = groups[0];
   const winningFamily = winner[0];
   const winningGroup = winner[1];
 
   const sourceCount = validPredictions.length;
   const agreementCount = winningGroup.count;
+
   const agreementPercent =
     (agreementCount / sourceCount) * 100;
 
   /*
-   * امتیاز اجماع:
+   * سیستم امتیازدهی جدید
    *
-   * 50 امتیاز = اجماع منابع
-   * 30 امتیاز = تعداد منابع مستقل
-   * 20 امتیاز = اختلاف با گروه مخالف
+   * 40 امتیاز = میزان توافق
+   * 25 امتیاز = تعداد منابع مستقل
+   * 20 امتیاز = قدرت برتری گروه بر مخالف
+   * 15 امتیاز = پاداش اجماع کامل
    *
-   * این امتیاز عمداً probabilistic است و
-   * به معنی برد قطعی نیست.
+   * این امتیاز احتمال برد قطعی نیست.
    */
 
   const agreementScore = Math.min(
-    50,
-    agreementPercent * 0.5
+    40,
+    agreementPercent * 0.4
   );
 
   const sourceScore = Math.min(
-    30,
-    sourceCount * 5
+    25,
+    sourceCount * 4
   );
 
-  const secondGroupWeight = groups[1]?.[1].weight ?? 0;
+  const secondGroupWeight =
+    groups[1]?.[1].weight ?? 0;
+
+  const totalCompetingWeight =
+    winningGroup.weight + secondGroupWeight;
+
   const dominance =
-    winningGroup.weight /
-    Math.max(1, winningGroup.weight + secondGroupWeight);
+    totalCompetingWeight > 0
+      ? winningGroup.weight / totalCompetingWeight
+      : 1;
 
   const dominanceScore = dominance * 20;
 
+  const fullConsensusBonus =
+    agreementCount === sourceCount
+      ? sourceCount >= 3
+        ? 15
+        : 8
+      : 0;
+
   let confidenceScore = Math.round(
     agreementScore +
-    sourceScore +
-    dominanceScore
+      sourceScore +
+      dominanceScore +
+      fullConsensusBonus
   );
 
   confidenceScore = Math.max(
@@ -180,22 +198,28 @@ export function calculateConsensus(
 
   const representative =
     validPredictions.find(
-      (p) => tipFamily(normalizeTip(p.tip)) === winningFamily
+      (p) =>
+        tipFamily(normalizeTip(p.tip)) ===
+        winningFamily
     ) ?? validPredictions[0];
 
-  const sourceNames = winningGroup.sources.join(", ");
+  const sourceNames =
+    winningGroup.sources.join(", ");
 
   const reasoning =
-    `اجماع ${agreementCount} از ${sourceCount} منبع (${Math.round(
-      agreementPercent
-    )}٪) ⚡ منابع موافق: ${sourceNames} ⚡ امتیاز اجماع: ${confidenceScore}/100`;
+    `اجماع ${agreementCount} از ${sourceCount} منبع ` +
+    `(${Math.round(agreementPercent)}٪) ` +
+    `⚡ منابع موافق: ${sourceNames} ` +
+    `⚡ قدرت اجماع: ${Math.round(dominance * 100)}٪ ` +
+    `⚡ امتیاز اجماع: ${confidenceScore}/100`;
 
   return {
     consensusTip: representative.tip,
     confidenceScore,
     agreementCount,
     sourceCount,
-    agreementPercent: Math.round(agreementPercent * 10) / 10,
+    agreementPercent:
+      Math.round(agreementPercent * 10) / 10,
     reasoning,
   };
 }
