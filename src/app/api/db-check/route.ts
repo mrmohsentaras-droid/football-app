@@ -70,6 +70,31 @@ export async function GET() {
       ) x
     `);
 
+    const tipVariantSamples = await db.execute(sql`
+      SELECT
+        match_date,
+        match_time,
+        league,
+        home_team,
+        away_team,
+        source,
+        COUNT(*)::int AS count,
+        COUNT(DISTINCT tip)::int AS distinct_tips,
+        ARRAY_AGG(DISTINCT tip ORDER BY tip) AS tips
+      FROM source_predictions
+      GROUP BY
+        match_date,
+        match_time,
+        league,
+        home_team,
+        away_team,
+        source
+      HAVING COUNT(*) > 1
+         AND COUNT(DISTINCT tip) > 1
+      ORDER BY match_date, match_time, source
+      LIMIT 20
+    `);
+
     const samples = await db.execute(sql`
       SELECT
         match_date,
@@ -108,6 +133,7 @@ export async function GET() {
       duplicateTipVariantGroups: Number(
         tipVariants.rows[0]?.groups_with_multiple_tips ?? 0
       ),
+      duplicateTipVariantSamples: tipVariantSamples.rows,
       duplicatesBySource: duplicates.rows,
       duplicateSamples: samples.rows,
     });
