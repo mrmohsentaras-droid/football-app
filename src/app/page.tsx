@@ -47,7 +47,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#0d0f12] text-white p-4 max-w-2xl mx-auto font-sans" dir="ltr">
+    <div dir="ltr" className="min-h-screen bg-[#0d0f12] text-white p-4 max-w-2xl mx-auto font-sans [direction:ltr]">
       {/* Header */}
       <header className="flex items-center justify-between py-4 border-b border-gray-800 mb-6">
         <div className="w-9 h-9 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400">
@@ -104,8 +104,8 @@ export default function Home() {
                 </div>
 
                 {/* Agreed Source Badges */}
-                <div className="flex flex-wrap items-center gap-1.5 my-3 justify-center">
-                  <span className="text-[10px] text-gray-400 font-medium mr-1">Agreeing Sources:</span>
+                <div className="flex flex-row items-center gap-1.5 my-3 justify-center" dir="ltr">
+                  <span className="text-[10px] text-gray-400 font-medium">Agreeing Sources:</span>
                   {(match.sources || []).map((src, sIdx) => (
                     <span key={sIdx} className="bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 text-[10px] font-semibold px-2 py-0.5 rounded-md">
                       ✓ {src}
@@ -174,6 +174,6 @@ export default function Home() {
           ))}
         </div>
       </section>
-    </main>
+    </div>
   );
 }
