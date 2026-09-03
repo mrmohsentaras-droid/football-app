@@ -47,7 +47,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#0d0f12] text-white p-4 max-w-2xl mx-auto font-sans ltr" dir="ltr">
+    <main className="min-h-screen bg-[#0d0f12] text-white p-4 max-w-2xl mx-auto font-sans" dir="ltr">
       {/* Header */}
       <header className="flex items-center justify-between py-4 border-b border-gray-800 mb-6">
         <div className="w-9 h-9 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400">
