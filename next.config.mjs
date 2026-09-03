@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: false,               // غیرفعال کردن SWC (کلید اصلی حل مشکل)
+  swcMinify: false,
+  output: "standalone",   // این خط حیاتی است
   typescript: {
     ignoreBuildErrors: true,
   },
