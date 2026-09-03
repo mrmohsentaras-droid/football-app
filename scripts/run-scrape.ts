@@ -1,22 +1,16 @@
-async function triggerScrape() {
-  const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN 
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-    : 'https://football-app-production-843e.up.railway.app';
+import { execSync } from "child_process";
 
-  console.log(`Sending scrape request to: ${baseUrl}/api/scrape ...`);
+const url = "https://football-app-production-843e.up.railway.app/api/scrape";
 
-  try {
-    const res = await fetch(`${baseUrl}/api/scrape`);
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    const data = await res.json();
-    console.log('✅ Scrape completed successfully!');
-    console.log(`Matches Scraped: ${data.totalMatchesScraped || data.consensusMatches || 0}`);
-    console.log(`Active Sources:`, data.sources || `${data.activeSourcesCount || 0} sources`);
-  } catch (error: any) {
-    console.error('❌ Scrape request failed:', error.message);
-  }
+console.log(`Sending scrape request to: ${url} ...`);
+
+try {
+  const output = execSync(`curl -s ${url}`, { encoding: "utf8" });
+  const data = JSON.parse(output);
+
+  console.log("✅ Scrape completed successfully!");
+  console.log(`Matches Scraped: ${data.totalMatchesScraped || data.consensusMatches || 0}`);
+  console.log("Active Sources:", data.sources || data.activeSourcesCount || 0);
+} catch (error: any) {
+  console.error("❌ Scrape request failed:", error.message);
 }
-
-triggerScrape();
