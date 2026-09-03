@@ -47,7 +47,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#0d0f12] text-white p-4 max-w-2xl mx-auto font-sans">
+    <main className="min-h-screen bg-[#0d0f12] text-white p-4 max-w-2xl mx-auto font-sans ltr" dir="ltr">
       {/* Header */}
       <header className="flex items-center justify-between py-4 border-b border-gray-800 mb-6">
         <div className="w-9 h-9 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400">
@@ -77,7 +77,7 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="text-center py-10 text-gray-500 text-sm">در حال بارگذاری پیشنهادات...</div>
+          <div className="text-center py-10 text-gray-500 text-sm">Loading predictions...</div>
         ) : (
           <div className="space-y-4">
             {topPicks.map((match, idx) => (
@@ -92,7 +92,7 @@ export default function Home() {
                 {/* Match Time / Date */}
                 <div className="text-center my-1">
                   <span className="text-[10px] bg-gray-800/80 text-gray-400 font-mono px-2 py-0.5 rounded">
-                    🕒 {match.time || '19:45'} | {match.date || '2026-09-02'}
+                    🕒 {match.time || '20:00'} | {match.date || '2026-09-03'}
                   </span>
                 </div>
 
@@ -105,8 +105,8 @@ export default function Home() {
 
                 {/* Agreed Source Badges */}
                 <div className="flex flex-wrap items-center gap-1.5 my-3 justify-center">
-                  <span className="text-[10px] text-gray-500 font-medium ml-1">Agreeing Sources:</span>
-                  {(match.sources || ['Statarea', 'SoccerVista']).map((src, sIdx) => (
+                  <span className="text-[10px] text-gray-400 font-medium mr-1">Agreeing Sources:</span>
+                  {(match.sources || []).map((src, sIdx) => (
                     <span key={sIdx} className="bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 text-[10px] font-semibold px-2 py-0.5 rounded-md">
                       ✓ {src}
                     </span>
@@ -153,7 +153,7 @@ export default function Home() {
 
               {/* Source Badges */}
               <div className="flex flex-wrap gap-1 mb-3">
-                {(match.sources || ['AllNigeriaFootball']).map((src, sIdx) => (
+                {(match.sources || []).map((src, sIdx) => (
                   <span key={sIdx} className="bg-gray-800/80 text-gray-300 text-[9px] px-1.5 py-0.5 rounded border border-gray-700/50">
                     {src}
                   </span>
